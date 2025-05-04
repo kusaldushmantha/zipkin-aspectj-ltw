@@ -1,15 +1,19 @@
 package com.example.zipkin.zipkin_demo;
 
 import brave.Tracer;
-import lombok.Getter;
-import org.springframework.stereotype.Component;
 
-@Component
 public class TracerHolder {
-    @Getter
-    private static Tracer tracer;
+    private static final ThreadLocal<Tracer> tracerThreadLocal = new ThreadLocal<>();
 
-    public TracerHolder(Tracer tracer) {
-        TracerHolder.tracer = tracer;
+    public static void setTracer(Tracer tracer) {
+        tracerThreadLocal.set(tracer);
+    }
+
+    public static Tracer getTracer() {
+        return tracerThreadLocal.get();
+    }
+
+    public static void clear() {
+        tracerThreadLocal.remove();
     }
 }

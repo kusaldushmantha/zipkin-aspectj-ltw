@@ -1,10 +1,12 @@
 package com.example.zipkin.zipkin_demo;
 
 import brave.Span;
+import brave.Tracer;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -12,14 +14,22 @@ import java.io.IOException;
 
 @Component
 public class TracerHeaderFilter extends OncePerRequestFilter {
+    private final Tracer tracer;
+
+    // Injecting Tracer via constructor (Spring will automatically provide it)
+    @Autowired
+    public TracerHeaderFilter(Tracer tracer) {
+        this.tracer = tracer;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String canId = request.getHeader("can_id");
-        Span currentSpan = TracerHolder.getTracer().currentSpan();
+        Span currentSpan = tracer.currentSpan();
         if (currentSpan != null && canId != null) {
             currentSpan.tag("can_id", canId);
         }
-
+        TracerHolder.setTracer(tracer);
         filterChain.doFilter(request, response);
     }
 }
